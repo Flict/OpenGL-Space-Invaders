@@ -1,0 +1,30 @@
+Classes:
+
+GameObject
+	Members:
+		SDL_Rect bounds
+	Methods:
+		Constructor
+		void Draw
+		void Update
+
+
+Invader : GameObject
+	Constructor
+	Destructor
+	MoveX
+	MoveY
+	Fire
+
+Player : GameObject
+	Lives
+	Score
+	Credits
+
+Barriers : GameObject
+
+Bullet : GameObject
+	
+HUD : GameObject
+	Hi-Score
+	
