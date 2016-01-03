@@ -13,11 +13,11 @@ AABB::~AABB()
 {
 }
 
-bool AABB::Intersects(AABB a, AABB b)
+bool AABB::Intersects(AABB b)
 {
-	if (abs(a.m_center.x - b.m_center.x) < a.m_halfSize.x + b.m_halfSize.x)
+	if (abs(this->m_center.x - b.m_center.x) < this->m_halfSize.x + b.m_halfSize.x)
 	{
-		if (abs(a.m_center.y - b.m_center.y) < a.m_halfSize.y + b.m_halfSize.y)
+		if (abs(this->m_center.y - b.m_center.y) < this->m_halfSize.y + b.m_halfSize.y)
 		{
 			return true;
 		}

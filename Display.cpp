@@ -1,7 +1,13 @@
 #include "Display.h"
+#include "SDL_ttf.h"
 
 Display::Display(GLint width, GLint height, const std::string& title)
 {
+	/*if (!TTF_WasInit() && TTF_Init() == -1) {
+		printf("TTF_Init: %s\n", TTF_GetError());
+		exit(1);
+	}*/
+	TTF_Init();
 	SDL_Init(SDL_INIT_EVERYTHING); // Initialise SDL
 
 								   // Set RGB colour data to 32 bit
@@ -45,6 +51,8 @@ Display::~Display()
 	SDL_GL_DeleteContext(m_glContext); // Deletes the OpenGL context
 	SDL_DestroyWindow(m_window); // Destroy the Window
 	SDL_Quit(); // De-initialise Window
+
+	TTF_Quit(); // De-initialise TrueType fonts
 }
 
 void Display::Clear(GLfloat r, GLfloat g, GLfloat b, GLfloat a)

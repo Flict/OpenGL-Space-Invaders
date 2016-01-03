@@ -40,7 +40,7 @@ void Mesh::InitializeVertexBuffer()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertexPositions), m_vertexPositions, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	cout << "positionBufferObject created OK! GLUint is: " << m_positionBufferObject << endl;
+	//cout << "positionBufferObject created OK! GLUint is: " << m_positionBufferObject << endl;
 }
 
 void Mesh::LoadAssets()
@@ -56,9 +56,9 @@ void Mesh::LoadAssets()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indicesPositions), m_indicesPositions, GL_STATIC_DRAW);
 
-	cout << "Vertex Array Object created OK! GLUint is: " << m_vao << std::endl;
+	//cout << "Vertex Array Object created OK! GLUint is: " << m_vao << std::endl;
 
-	cout << "Loaded Assets OK!\n";
+	//cout << "Loaded Assets OK!\n";
 }
 
 void Mesh::Draw(Transform& transform, Camera& camera, bool cullBack)

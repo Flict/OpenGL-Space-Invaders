@@ -1,7 +1,10 @@
 #include "GameObject.h"
 
-GameObject::GameObject(Mesh mesh, glm::vec2 dimensions, glm::vec3 position, std::string texturePath)
+
+
+GameObject::GameObject(Mesh mesh, glm::vec2 dimensions, GameObjectType type, glm::vec3 position, std::string texturePath)
 {
+	m_type = type; // Set the type
 	m_mesh = mesh; // Create a new mesh for the game object
 	transform = Transform(position); // Set the position of the mesh
 	texture = new Texture(texturePath); // Texture for object
@@ -10,6 +13,9 @@ GameObject::GameObject(Mesh mesh, glm::vec2 dimensions, glm::vec3 position, std:
 
 	// Store bounding box size and coordinates
 	aabb = AABB(glm::vec2(position.x + dimensions.x / 2, position.y + dimensions.y / 2), glm::vec2(dimensions.x / 2, dimensions.y / 2));
+
+	id = gameObjects.size(); // Store the ID based on the size of vector
+	gameObjects.push_back(this);
 }
 
 
@@ -39,3 +45,5 @@ bool GameObject::CheckCollision(SDL_Rect a, SDL_Rect b)
 	SDL_Rect collisionPoint;
 	return SDL_IntersectRect(&a, &b, &collisionPoint);
 }
+
+vector<GameObject*> GameObject::gameObjects; // All the game objects in the game

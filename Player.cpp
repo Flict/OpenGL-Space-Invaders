@@ -24,7 +24,7 @@ const GLuint indices[] = {
 };
 
 
-Player::Player() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(indices)), glm::vec2(1.f, 1.7), glm::vec3(0.f , 0.f , 0.f))
+Player::Player() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(indices)), glm::vec2(1.f, 1.7), GameObjectType::player, glm::vec3(0.f , 0.f , 0.f))
 {
 
 }
@@ -32,4 +32,10 @@ Player::Player() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(i
 
 Player::~Player()
 {
+}
+
+GLvoid Player::Fire(BulletDirection direction)
+{
+	Bullet* bullet = new Bullet(direction);
+	bullet->transform.GetPos() = this->transform.GetPos();
 }

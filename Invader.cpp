@@ -24,12 +24,31 @@ const GLuint indices[] = {
 };
 
 
-Invader::Invader() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(indices)), glm::vec2(1.f, 1.7), glm::vec3(0.f, 0.f, 0.f))
+Invader::Invader() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(indices)), glm::vec2(1.f, 1.7), GameObjectType::invader, glm::vec3(0.f, 0.f, 0.f))
 {
-
+	
 }
 
 
 Invader::~Invader()
 {
+}
+
+GLvoid Invader::Fire(BulletDirection direction)
+{
+	Bullet* bullet = new Bullet(direction);
+	bullet->transform.GetPos() = this->transform.GetPos();
+}
+
+GLvoid Invader::Death()
+{
+	death = true;
+}
+
+GLvoid Invader::Update(GLfloat deltaTime)
+{
+	GameObject::Update(deltaTime); // Parent class update
+
+	/*if (death == true)
+		explosion.Update(deltaTime);*/
 }

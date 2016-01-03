@@ -11,6 +11,6 @@ public:
 	AABB(glm::vec2 center, glm::vec2 halfSize);
 	~AABB();
 
-	bool Intersects(AABB a, AABB b);
+	bool Intersects(AABB b);
 };
 

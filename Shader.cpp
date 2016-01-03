@@ -17,7 +17,7 @@ Shader::Shader(string shaderPath)
 		exit(1);
 	}
 	else {
-		cout << "GLSL program creation OK! GLUint is: " << m_program << std::endl;
+		//cout << "GLSL program creation OK! GLUint is: " << m_program << std::endl;
 	}
 
 	m_positionLocation = glGetAttribLocation(m_program, "position");

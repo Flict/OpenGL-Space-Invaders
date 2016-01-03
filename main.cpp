@@ -16,6 +16,7 @@
 #include "Player.h"
 #include "Invader.h"
 #include "GameObject.h"
+#include "Square.h"
 
 #define MAX_CONTROLLERS 4
 SDL_GameController *ControllerHandles[MAX_CONTROLLERS]; 
@@ -72,31 +73,48 @@ int main( int argc, char* args[] )
 		controllerIndex++;
 	}
 
-	
-	const GLint INVADER_AMOUNT = 11;
-	Player player;	
-	Invader invaders[INVADER_AMOUNT];
+	const GLint INVADER_ROWS = 5; // Amount of rows of invaders 
+	const GLint INVADERS_PER_ROW = 11; // Amount of Invaders per row
 
-	for (int i = 0; i < INVADER_AMOUNT; i++)
+	GLuint invaderGrid[INVADER_ROWS][INVADERS_PER_ROW]
 	{
-		invaders[i] = Invader();
+		{0,0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,0,0,0,0,0,0,0,0}
+	};
+	
+	
+	Player player;
+	Square score;
+	score.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, "Bob came to town");
+	score.transform.SetScale(glm::vec3( 0.3f,0.3f,0.3f ));
 
-		invaders[i].transform.GetPos().y = 0.6f;
-		invaders[i].transform.GetPos().x = -0.9f + (0.14 * i);
-		invaders[i].transform.SetScale(glm::vec3(.1f, .05f, .1f));
+	for (GLint r = 0; r < INVADER_ROWS; r++)
+	{
+		for (GLint c = 0; c < INVADERS_PER_ROW; c++)
+		{
+			Invader* temp = new Invader();
+			temp->transform.GetPos().y = 0.9f - (0.14 * r);
+			temp->transform.GetPos().x = -0.7f + (0.14 * c);
+			temp->transform.SetScale(glm::vec3(.1f, .05f, .1f));
+		}
 	}
+
+	player.transform.GetPos().y = -0.7f;
+	player.transform.SetScale(glm::vec3(.1f, .05f, .1f));
 	
 	Transform paddle2Transform; //  Transformations
 	
-	Camera perspectiveCamera(glm::vec3(0.f, 0.f, 2.f), 70.f, (float)800.f / (float)600.f, 0.1f, 10000.0f);
+	//Camera perspectiveCamera(glm::vec3(0.f, 0.f, 2.f), 70.f, (float)800.f / (float)600.f, 0.1f, 10000.0f);
 	Camera orthographicCamera(glm::vec3(0.f, 0.f, 3.f), -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
 
 	Camera renderCamera = orthographicCamera; // Default camera for rendering scene
-	
-	player.transform.GetPos().y = -0.7f;
-	player.transform.SetScale(glm::vec3(.1f, .05f, .1f));
 
-	
+	const GLfloat COOLDOWN_INTERVAL = 30.0f; // How long to wait
+	GLfloat cooldownTimer = 0.0f; // Current timer
+	GLfloat coolDownActive = false; // Whether or not the cool down is active
+	GLfloat gameSpeed = 1.0f; // Speed of the game
+
+	GLint scoreCounter = 0;
 
 	bool moveRight = true; // Whether the invaders should move right
 	bool moveLeft = false; // Whether to move left
@@ -104,6 +122,12 @@ int main( int argc, char* args[] )
 	while (!display.IsWindowClosed()) /// While the window is open
 	{
 		display.Clear(0.0f, 0.0f, 0.0f, 0.0f); // Clear the screen to black
+
+		CalculateDelta(); // Calculate deltaTime from how long it took between frames
+		deltaTime *= gameSpeed;
+		scoreCounter++;
+		delete score.texture;
+		score.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, "Score: " + std::to_string(scoreCounter));
 
 		for (int ControllerIndex = 0;
 		ControllerIndex < MAX_CONTROLLERS;
@@ -139,78 +163,123 @@ int main( int argc, char* args[] )
 						player.transform.GetPos().x -= deltaTime * player.speed;
 				}
 
-				if (StickY > 10000)
+				if (Down)
 				{
-					if (((player.transform.GetPos().y - 0.1f) - deltaTime * player.speed) >= -1)
-						player.transform.GetPos().y -= deltaTime * player.speed;
+					//if (((player.transform.GetPos().y - 0.1f) - deltaTime * player.speed) >= -1)
+						//player.transform.GetPos().y -= deltaTime * player.speed;
+					gameSpeed-= 0.1f;
+					if (gameSpeed < 0)
+						gameSpeed = 0;
+					cout << gameSpeed << endl;
 				}
-				else if (StickY < -10000)
+				else if (Up)
 				{
-					if (((player.transform.GetPos().y + 0.1f) + deltaTime * player.speed) <= 1)
-						player.transform.GetPos().y += deltaTime * player.speed;
+					//if (((player.transform.GetPos().y + 0.1f) + deltaTime * player.speed) <= 1)
+						//player.transform.GetPos().y += deltaTime * player.speed;
+					gameSpeed += 0.1f;
+					if (gameSpeed > 5)
+						gameSpeed = 5;
+
+					cout << gameSpeed << endl;
 					
 				}
-					
+
+				if (Start)
+				{
+					if (gameSpeed == 0) // Already paused
+						gameSpeed = 1;
+					else
+						gameSpeed = 0;
+				}
+
+				
+				if (AButton)
+				{
+					if (!coolDownActive)
+					{
+						player.Fire(BulletDirection::UP);
+						coolDownActive = true; // Make the cool down active
+					}
+				}
+
+				if (coolDownActive)
+				{
+					cooldownTimer++; // Increase the cooldown timer
+
+					if (cooldownTimer >= COOLDOWN_INTERVAL) // Whether cooldown has elapsed
+					{
+						cooldownTimer = 0.0f; // Reset timer
+						coolDownActive = false; // Turn cooldown off
+					}
+				}
 			}
 			else
 			{
 				// TODO: This controller is note plugged in.
 			}
 		}
-		
-		CalculateDelta(); // Calculate deltaTime from how long it took between frames
-		
-		player.Update(deltaTime);
 
-		
-		
-		for (int i = 0; i < INVADER_AMOUNT; i++)
+		// Draw and Update all objects
+		for (std::vector<int>::size_type i = 0; i != GameObject::gameObjects.size(); i++)
 		{
-			if (moveRight && !moveLeft)
-				invaders[i].transform.GetPos().x += deltaTime * invaders[i].speed;	
-			else if (!moveRight && moveLeft)
+			if (GameObject::gameObjects[i]->m_type == GameObjectType::invader)
 			{
-				invaders[i].transform.GetPos().x -= deltaTime * invaders[i].speed;
-			}
-
-			if (moveDown)
-			{
-				for (int j = 0; j < 50; j++)
-				{
-					invaders[i].transform.GetPos().y -= deltaTime * 1.f;
-				}				
-			}
+				Invader* invader = (Invader*)GameObject::gameObjects[i];
 				
-			invaders[i].Update(deltaTime);
-			invaders[i].Draw(renderCamera);
+				if (moveRight)
+				{
+					if (invader->transform.GetPos().x + (invader->speed * deltaTime) >= 1.0f)
+					{
+						invader->transform.GetPos().x += (invader->speed * deltaTime);
+						moveRight = false;
+						moveDown = true;
+					}
+						
+					else
+						invader->transform.GetPos().x += (invader->speed * deltaTime);
+				}
+				else
+				{
+					if (invader->transform.GetPos().x - (invader->speed * deltaTime) <= -1.0f)
+					{
+						invader->transform.GetPos().x += (invader->speed * deltaTime);
+						moveRight = true;
+						moveDown = true;
+					}
+						
+					else
+						invader->transform.GetPos().x -= (invader->speed * deltaTime);
+				}
+					
+			}
+			
 
-			if (player.aabb.Intersects(player.aabb, invaders[i].aabb))
-				cout << "Intersection with invader: " << i << endl;
+			// Draw and update all game models 
+			GameObject::gameObjects[i]->Draw(renderCamera); // BUG: Must draw before updating otherwise a crash will occur
+			GameObject::gameObjects[i]->Update(deltaTime);
+
+			if (i >= GameObject::gameObjects.size()) // Break the loop if an object is destroyed and the index is now invalid
+				break;
+		}		
+
+		// Move invaders down
+		for (std::vector<int>::size_type i = 0; i != GameObject::gameObjects.size(); i++)
+		{
+			if (GameObject::gameObjects[i]->m_type == GameObjectType::invader)
+			{
+				Invader* invader = (Invader*)GameObject::gameObjects[i];
+				if (moveDown)
+				{
+					for (int y = 0; y < 2; y++)
+					{
+						invader->transform.GetPos().y -= y * 0.1f;
+					}
+				}
+			}
 		}
+
+
 		moveDown = false;
-		
-		
-		if (moveRight && ((invaders[10].transform.GetPos().x + 0.1f) + deltaTime * invaders[10].speed) >= 1)
-		{
-			moveRight = false;
-			moveDown = true;
-			moveLeft = true;
-		}
-		
-		if (moveLeft && ((invaders[0].transform.GetPos().x - 0.1f) - deltaTime * invaders[0].speed) <= -1)
-		{
-			moveLeft = false;
-			moveDown = true;
-			moveRight = true;
-		}
-
-
-
-		player.Draw(renderCamera);
-		
-
-		//cout << player.aabb.Intersects(player.aabb, invaders[0].aabb) << endl;
-
 		renderCamera.Update();
 		display.Update(deltaTime, renderCamera); // Update the display
 	}
@@ -224,6 +293,9 @@ int main( int argc, char* args[] )
 	}
 
 	SDL_Quit();
+
+	// Free memory
+//	invaders.empty();
 
 	return 0;
 }

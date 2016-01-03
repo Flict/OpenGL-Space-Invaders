@@ -1,2 +1,2 @@
-#3D Pong
-An implementation of pong with 3D elements
+#Space Invaders OpenGL
+An implementation of Space Invaders using OpenGL
