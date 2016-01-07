@@ -1,8 +1,8 @@
 #pragma once
 #include <GL/glew.h>
 #include <iostream>
-#include <glm\glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "graphics_dependencies\glm\glm\glm.hpp"
+#include "graphics_dependencies\glm\glm\gtc\type_ptr.hpp"
 #include "Shader.h"
 #include "Transform.h"
 #include "Camera.h"

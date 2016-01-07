@@ -2,6 +2,7 @@
 
 #include "Explosion.h"
 
+
 enum BulletDirection // Possible bullet directions
 {
 	UP = -1,
@@ -19,6 +20,7 @@ public:
 	const GLfloat LIFE_SPAN = 0.5f; // The amount of time to wait before destroying particles
 	GLfloat timeAlive = 0.f; // The amount of time the particles have been alive
 
+	static GLint SCORE;
 	// Methods
 	Bullet(BulletDirection direction);
 	virtual ~Bullet();

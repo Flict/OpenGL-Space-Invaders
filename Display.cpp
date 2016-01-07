@@ -1,6 +1,10 @@
 #include "Display.h"
 #include "SDL_ttf.h"
 
+GLfloat Display::gameSpeed; // Speed of the game
+GLfloat Display::cooldownTimer[2] = { 0.f, 0.f }; // Current timers
+GLfloat Display::cooldownActive[2] = { false, false }; // Whether or not the cool down is active
+
 Display::Display(GLint width, GLint height, const std::string& title)
 {
 	/*if (!TTF_WasInit() && TTF_Init() == -1) {
@@ -38,10 +42,14 @@ Display::Display(GLint width, GLint height, const std::string& title)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	for (int i = 0; i < 322; i++)
+	for (GLint i = 0; i < 322; i++)
 	{
 		KEYS[i] = false; // Initialise all keys to false
 	}
+
+	m_perspective = false;
+	m_cameraMode = false;
+	m_viewPort = STANDARD;
 	//SDL_EnableKeyRepeat()
 	//SDL_SetRelativeMouseMode(SDL_TRUE);
 }
@@ -51,17 +59,16 @@ Display::~Display()
 	SDL_GL_DeleteContext(m_glContext); // Deletes the OpenGL context
 	SDL_DestroyWindow(m_window); // Destroy the Window
 	SDL_Quit(); // De-initialise Window
-
 	TTF_Quit(); // De-initialise TrueType fonts
 }
 
-void Display::Clear(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+GLvoid Display::Clear(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {
 	glClearColor(r, g, b, a); // Fill the display with colour
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the colour buffer so we can fill it with the display colour
 }
 float rot = 0.1f, pitch = 0.1f;
-void Display::Update(float deltaTime, Camera& camera)
+GLvoid Display::Update(GLfloat deltaTime, Camera& camera, Player& player)
 {
 	SDL_GL_SwapWindow(m_window); // Swap the window buffers
 
@@ -78,55 +85,44 @@ void Display::Update(float deltaTime, Camera& camera)
 			//KEYS[e.key.keysym.sym] = true; // Set key is down
 			switch (e.key.keysym.sym)
 			{
-			case SDLK_w:
-				if (m_cameraMode)
-					camera.MoveForward(deltaTime * 30.0f);
-				break;
-			case SDLK_s:
-				if (m_cameraMode)
-					camera.MoveForward(deltaTime * -30.0f);
-				break;
 			case SDLK_a:
-				if (m_cameraMode)
-					camera.MoveRight(deltaTime * 30.f);
+				if (((player.transform.GetPos().x - 0.1f) - deltaTime * player.speed) >= -1)
+					player.transform.GetPos().x -= deltaTime * player.speed;
 				break;
 			case SDLK_d:
-				if (m_cameraMode)
-					camera.MoveRight(deltaTime * -30.f);
+				if (((player.transform.GetPos().x + 0.1f) + deltaTime * player.speed) <= 1)
+					player.transform.GetPos().x += deltaTime * player.speed;
 				break;
 			case SDLK_UP:
-				if (m_cameraMode)
-				camera.Pitch(pitch);
+				Display::gameSpeed += 0.1f;
+				if (Display::gameSpeed > 5)
+					Display::gameSpeed = 5;
+
+				cout << "Game Speed: " << Display::gameSpeed << endl;
 				break;
 			case SDLK_DOWN:
-				if (m_cameraMode)
-					camera.Pitch(-pitch);
+				Display::gameSpeed -= 0.1f;
+				if (Display::gameSpeed < 0)
+					Display::gameSpeed = 0;
+				cout << "Game Speed: " << Display::gameSpeed << endl;
 				break;
-			case SDLK_LEFT:
-				if (m_cameraMode)
-				camera.RotateY(pitch);
+			case SDLK_SPACE:
+				if (!cooldownActive[0])
+				{
+					player.Fire(BulletDirection::UP);
+					Display::cooldownActive[0] = true; // Make the cool down active
+				}
 				break;
-			case SDLK_RIGHT:
-				if (m_cameraMode)
-				camera.RotateY(-pitch);
-				break;
-			case SDLK_F1:
-				m_perspective = !m_perspective; // Switch between mode value
-				break;
-			case SDLK_F2:
-				m_cameraMode = !m_cameraMode; // Switch between mode value
-				break;
-			case SDLK_F3: // View port standard
-				m_viewPort = STANDARD;
-				break;
-			case SDLK_F4: // View port follow ball
-				m_viewPort = FOLLOWBALL;
-				break;
-			case SDLK_F5: // View port follow ball
-				m_viewPort = PADDLE1;
-				break;
-			case SDLK_F6: // View port follow ball
-				m_viewPort = PADDLE2;
+			case SDLK_RETURN:
+				if (!Display::cooldownActive[1])
+				{
+					if (Display::gameSpeed == 0) // Already paused
+						Display::gameSpeed = 1;
+					else
+						Display::gameSpeed = 0;
+					Display::cooldownActive[1] = true; // Make the cool down active
+				}
+				
 				break;
 			}
 			break;
@@ -140,7 +136,7 @@ void Display::Update(float deltaTime, Camera& camera)
 	}
 }
 
-bool Display::IsWindowClosed()
+GLboolean Display::IsWindowClosed()
 {
 	return m_isWindowClosed;
 }

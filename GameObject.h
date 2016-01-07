@@ -21,8 +21,6 @@ public:
 	GameObject(Mesh mesh, glm::vec2 dimensions, GameObjectType type, glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), std::string texturePath = defaultTexture); // Constructor
 	virtual ~GameObject();
 
-	bool GameObject::CheckCollision(SDL_Rect a, SDL_Rect b); // Checks collisions
-
 	static vector<GameObject*> gameObjects; // All the game objects in the game
 	Transform transform; // Objects Transformations
 	Texture* texture; // Objects texture

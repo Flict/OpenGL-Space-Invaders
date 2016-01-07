@@ -40,10 +40,4 @@ GLvoid GameObject::Draw(Camera& camera)
 	texture->Unbind(); // Unbind from texture
 }
 
-bool GameObject::CheckCollision(SDL_Rect a, SDL_Rect b)
-{
-	SDL_Rect collisionPoint;
-	return SDL_IntersectRect(&a, &b, &collisionPoint);
-}
-
 vector<GameObject*> GameObject::gameObjects; // All the game objects in the game

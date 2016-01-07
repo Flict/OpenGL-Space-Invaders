@@ -1,5 +1,5 @@
 #pragma once
-#include "glm\glm.hpp"
+#include "graphics_dependencies\glm\glm\glm.hpp"
 class AABB
 {
 public:

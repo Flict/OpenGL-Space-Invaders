@@ -8,17 +8,17 @@ Texture::Texture()
 
 }
 
-Texture::Texture(const std::string& fileName, TextureType textureType, std::string text)
+Texture::Texture(const std::string& fileName, TextureType textureType, std::string text, GLint fontSize)
 {
 	SDL_Surface* image;
 	TTF_Font* font;
-	SDL_Color color = { 255, 0, 0, 0 }; // Red
+	SDL_Color color = { 255, 255, 255, 0 }; // White
 
 	if (textureType == TextureType::Bitmap)
 		image = SDL_LoadBMP(fileName.c_str());
 	else
 	{
-		font = TTF_OpenFont(fileName.c_str(), 20.f);
+		font = TTF_OpenFont(fileName.c_str(), fontSize);
 		if (font == nullptr) {
 			std::cout << "TTF_OpenFont" << endl;
 			return;

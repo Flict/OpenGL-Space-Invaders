@@ -1,13 +1,19 @@
 #include <iostream>
+#include <SDL.h>
+#include <stdio.h>
+//#include "graphics_dependencies\glm\glm\glm.hpp"
+#include "Display.h"
+#include "Square.h"
 #include <vector>
 #include <algorithm>
 #include <fstream>
 #include <string>
 #include <GL/glew.h>
-#include <SDL.h>
-#include <glm\glm.hpp>
+
+#include <iomanip>
+#include <sstream>
 #include "Shader.h"
-#include "Display.h"
+
 #include "Mesh.h"
 #include "Texture.h"
 #include "Transform.h"
@@ -17,33 +23,21 @@
 #include "Invader.h"
 #include "GameObject.h"
 #include "Square.h"
+#include "Bullet.h"
+
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #define MAX_CONTROLLERS 4
 SDL_GameController *ControllerHandles[MAX_CONTROLLERS]; 
 
 using namespace std;
 
-void HandleInput(float deltaTime, Camera camera)
-{
-	SDL_Event event; // Used for storing the SDL event
-
-	while (SDL_PollEvent(&event))
-	{
-		switch (event.type)
-		
-		{
-			printf("entered switch detected\n");
-		case SDL_KEYUP:
-			//camera.MoveForward(deltaTime);
-			printf("Key press detected\n");
-			break;
-		}
-	}
-}
-
-double lastElapsedTime = SDL_GetTicks() - 1, deltaTime = 0.0f;
+GLdouble lastElapsedTime = SDL_GetTicks() - 1, deltaTime = 0.0f;
 // Calculate Deltatime
-void CalculateDelta()
+GLvoid CalculateDelta()
 {
 	double elapsedTime = SDL_GetTicks();
 	deltaTime = (elapsedTime / lastElapsedTime) / 1000.0f;
@@ -53,10 +47,11 @@ void CalculateDelta()
 
 int main( int argc, char* args[] )
 {	
+	cout << "Display Added" << endl;
 	srand(time(NULL));
-
+//
 	Display display(800, 600, "Space Invaders");
-
+//
 	int maxJoysticks = SDL_NumJoysticks();
 	int controllerIndex = 0;
 	for (int joystickIndex = 0; joystickIndex < maxJoysticks; ++joystickIndex)
@@ -81,19 +76,32 @@ int main( int argc, char* args[] )
 		{0,0,0,0,0,0,0,0,0,0,0},
 		{0,0,0,0,0,0,0,0,0,0,0}
 	};
-	
+//	
+//	
 	
 	Player player;
-	Square score;
-	score.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, "Bob came to town");
-	score.transform.SetScale(glm::vec3( 0.3f,0.3f,0.3f ));
+	Square scoreLabel;
+	Square scoreValue;
+	Square gameoverLabel;
+	scoreLabel.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, " ");
+	scoreLabel.transform.SetPos(glm::vec3(-0.9f, 0.9f, 1.f));
+	scoreLabel.transform.SetScale(glm::vec3( 0.15f,0.15f,0.15f ));
+
+	scoreValue.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, " ");
+	scoreValue.transform.SetPos(glm::vec3(-0.72f, 0.89f, 1.f));
+	scoreValue.transform.SetScale(glm::vec3(0.13f, 0.13f, 0.15f));
+
+	gameoverLabel.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, " ");
+	gameoverLabel.transform.SetPos(glm::vec3(-0.5f, 0.9f, 1.f));
+	gameoverLabel.transform.SetScale(glm::vec3(0.20f, 0.15f, 0.15f));
+	
 
 	for (GLint r = 0; r < INVADER_ROWS; r++)
 	{
 		for (GLint c = 0; c < INVADERS_PER_ROW; c++)
 		{
 			Invader* temp = new Invader();
-			temp->transform.GetPos().y = 0.9f - (0.14 * r);
+			temp->transform.GetPos().y = 0.8f - (0.14 * r);
 			temp->transform.GetPos().x = -0.7f + (0.14 * c);
 			temp->transform.SetScale(glm::vec3(.1f, .05f, .1f));
 		}
@@ -102,33 +110,37 @@ int main( int argc, char* args[] )
 	player.transform.GetPos().y = -0.7f;
 	player.transform.SetScale(glm::vec3(.1f, .05f, .1f));
 	
-	Transform paddle2Transform; //  Transformations
 	
-	//Camera perspectiveCamera(glm::vec3(0.f, 0.f, 2.f), 70.f, (float)800.f / (float)600.f, 0.1f, 10000.0f);
+//	//Camera perspectiveCamera(glm::vec3(0.f, 0.f, 2.f), 70.f, (float)800.f / (float)600.f, 0.1f, 10000.0f);
 	Camera orthographicCamera(glm::vec3(0.f, 0.f, 3.f), -1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
-
+//
 	Camera renderCamera = orthographicCamera; // Default camera for rendering scene
-
+//
 	const GLfloat COOLDOWN_INTERVAL = 30.0f; // How long to wait
-	GLfloat cooldownTimer = 0.0f; // Current timer
-	GLfloat coolDownActive = false; // Whether or not the cool down is active
-	GLfloat gameSpeed = 1.0f; // Speed of the game
+	Display::gameSpeed = 1; // Set the default game speed
 
-	GLint scoreCounter = 0;
+//	GLint scoreCounter = 0;
 
 	bool moveRight = true; // Whether the invaders should move right
 	bool moveLeft = false; // Whether to move left
 	bool moveDown = false;
+	bool gameover = false; // is the game over?
 	while (!display.IsWindowClosed()) /// While the window is open
 	{
 		display.Clear(0.0f, 0.0f, 0.0f, 0.0f); // Clear the screen to black
 
 		CalculateDelta(); // Calculate deltaTime from how long it took between frames
-		deltaTime *= gameSpeed;
-		scoreCounter++;
-		delete score.texture;
-		score.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, "Score: " + std::to_string(scoreCounter));
+		deltaTime *= Display::gameSpeed;
+		//scoreCounter++;
 
+		std::stringstream vub;
+		vub << setw(4) << setfill('0') << Bullet::SCORE;
+
+		delete scoreLabel.texture;
+		scoreLabel.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, "Score", 15);
+
+		delete scoreValue.texture;
+		scoreValue.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, vub.str(), 15);
 		for (int ControllerIndex = 0;
 		ControllerIndex < MAX_CONTROLLERS;
 			++ControllerIndex)
@@ -161,57 +173,69 @@ int main( int argc, char* args[] )
 				{
 					if (((player.transform.GetPos().x - 0.1f) - deltaTime * player.speed) >= -1)
 						player.transform.GetPos().x -= deltaTime * player.speed;
+
 				}
 
 				if (Down)
 				{
-					//if (((player.transform.GetPos().y - 0.1f) - deltaTime * player.speed) >= -1)
-						//player.transform.GetPos().y -= deltaTime * player.speed;
-					gameSpeed-= 0.1f;
-					if (gameSpeed < 0)
-						gameSpeed = 0;
-					cout << gameSpeed << endl;
+					Display::gameSpeed -= 0.1f;
+					if (Display::gameSpeed < 0)
+						Display::gameSpeed = 0;
+					cout << "Game Speed: " << Display::gameSpeed << endl;
 				}
 				else if (Up)
 				{
-					//if (((player.transform.GetPos().y + 0.1f) + deltaTime * player.speed) <= 1)
-						//player.transform.GetPos().y += deltaTime * player.speed;
-					gameSpeed += 0.1f;
-					if (gameSpeed > 5)
-						gameSpeed = 5;
+					Display::gameSpeed += 0.1f;
+					if (Display::gameSpeed > 5)
+						Display::gameSpeed = 5;
 
-					cout << gameSpeed << endl;
+					cout << "Game Speed: " << Display::gameSpeed << endl;
 					
 				}
 
 				if (Start)
 				{
-					if (gameSpeed == 0) // Already paused
-						gameSpeed = 1;
-					else
-						gameSpeed = 0;
+					if (!Display::cooldownActive[1])
+					{
+						if (Display::gameSpeed == 0) // Already paused
+							Display::gameSpeed = 1;
+						else
+							Display::gameSpeed = 0;
+						Display::cooldownActive[1] = true; // Make the cool down active
+
+						cout << "Start Button Pressed" << endl;
+					}
+					
 				}
 
 				
 				if (AButton)
 				{
-					if (!coolDownActive)
+					if (!Display::cooldownActive[0])
 					{
 						player.Fire(BulletDirection::UP);
-						coolDownActive = true; // Make the cool down active
-					}
-				}
+						Display::cooldownActive[0] = true; // Make the cool down active
 
-				if (coolDownActive)
+						cout << "A Button Pressed" << endl;
+					}
+					
+				}
+				
+				for (GLint i = 0; i < 2; i++)
 				{
-					cooldownTimer++; // Increase the cooldown timer
-
-					if (cooldownTimer >= COOLDOWN_INTERVAL) // Whether cooldown has elapsed
+					if (Display::cooldownActive[i])
 					{
-						cooldownTimer = 0.0f; // Reset timer
-						coolDownActive = false; // Turn cooldown off
+						Display::cooldownTimer[i]++; // Increase the cooldown timer
+
+						if (Display::cooldownTimer[i] >= COOLDOWN_INTERVAL) // Whether cooldown has elapsed
+						{
+							Display::cooldownTimer[i] = 0.0f; // Reset timer
+							Display::cooldownActive[i] = false; // Turn cooldown off
+						}
 					}
 				}
+
+				
 			}
 			else
 			{
@@ -219,7 +243,7 @@ int main( int argc, char* args[] )
 			}
 		}
 
-		// Draw and Update all objects
+//		// Draw and Update all objects
 		for (std::vector<int>::size_type i = 0; i != GameObject::gameObjects.size(); i++)
 		{
 			if (GameObject::gameObjects[i]->m_type == GameObjectType::invader)
@@ -274,16 +298,31 @@ int main( int argc, char* args[] )
 					{
 						invader->transform.GetPos().y -= y * 0.1f;
 					}
+
+
+				}
+
+				if (GameObject::gameObjects[i]->aabb.Intersects(player.aabb))
+				{
+					if (!gameover)
+					{
+						cout << "Game Over!" << endl;
+						gameover = true;
+					}
+					
+					delete gameoverLabel.texture;
+					gameoverLabel.texture = new Texture("./assets/OpenSans-Regular.ttf", TextureType::Font, "GAME OVER", 15);
+					Display::gameSpeed = 0;
 				}
 			}
 		}
 
-
+//
 		moveDown = false;
 		renderCamera.Update();
-		display.Update(deltaTime, renderCamera); // Update the display
+		display.Update(deltaTime, renderCamera, player); // Update the display
 	}
-
+//
 	for (int ControllerIndex = 0; ControllerIndex < MAX_CONTROLLERS; ++ControllerIndex)
 	{
 		if (ControllerHandles[ControllerIndex])
@@ -291,7 +330,7 @@ int main( int argc, char* args[] )
 			SDL_GameControllerClose(ControllerHandles[ControllerIndex]);
 		}
 	}
-
+//
 	SDL_Quit();
 
 	// Free memory

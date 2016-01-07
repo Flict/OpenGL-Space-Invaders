@@ -1,6 +1,6 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
+#include "graphics_dependencies\glm\glm\glm.hpp"
+#include "graphics_dependencies\glm\glm\gtx\transform.hpp"
 
 struct Camera
 {

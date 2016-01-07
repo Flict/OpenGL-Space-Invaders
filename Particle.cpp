@@ -14,7 +14,7 @@ const GLuint indices[] = {
 };
 
 
-Particle::Particle() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(indices)), glm::vec2(1.f, 1.f), GameObjectType::particle, glm::vec3(0.f, 0.f, 0.f))
+Particle::Particle() : GameObject(Mesh(vertices, sizeof(vertices), indices, sizeof(indices)), glm::vec2(1.f, 1.f), GameObjectType::particle, glm::vec3(0.f, 0.f, 0.f), "./assets/sparks.bmp")
 {
 
 }

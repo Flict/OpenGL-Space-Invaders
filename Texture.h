@@ -14,7 +14,7 @@ class Texture
 {
 public:
 	Texture(); // Default constructor
-	Texture(const std::string& fileName, TextureType textureType = TextureType::Bitmap, std::string text = "");
+	Texture(const std::string& fileName, TextureType textureType = TextureType::Bitmap, std::string text = " ", GLint fontSize = 10);
 
 	void Bind(); // Set OpenGL up to bind texture
 	void Unbind(); // Unbind a texture

@@ -7,6 +7,7 @@
 
 #include "Camera.h"
 #include "Transform.h"
+#include "Player.h" // Temporary for speed of handling input
 
 using namespace std;
 enum CameraViewPorts // Current viewport for camera
@@ -21,23 +22,23 @@ class Display
 public:
 	Display(GLint width, GLint height, const std::string& title);
 
-	void Clear(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
-	void Update(float deltaTime, Camera& camera); // Swaps between the window buffers to update the display
-	bool IsWindowClosed(); // Returns whether or not the window is closed
-	
-	bool m_perspective = false; // Whether the camera is perspective
-	bool m_cameraMode = false; // Whether the camera should be controlled or static. False is paddle control and true is Camera control
+	GLvoid Clear(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
+	GLvoid Update(float deltaTime, Camera& camera, Player& player); // Swaps between the window buffers to update the display
+	GLboolean IsWindowClosed(); // Returns whether or not the window is closed
+	static GLfloat gameSpeed; // Speed of the game
+	static GLfloat cooldownTimer[2]; // Current timers
+	static GLfloat cooldownActive[2]; // Whether or not the cool down is active
+	GLboolean m_perspective; // Whether the camera is perspective
+	GLboolean m_cameraMode; // Whether the camera should be controlled or static. False is paddle control and true is Camera control
 	virtual ~Display();
 
-	CameraViewPorts m_viewPort = STANDARD;
-	void operator=(const Display& display) {}
-	Display(const Display& display) {}
+	CameraViewPorts m_viewPort;
 
 	SDL_Window* m_window;
 	SDL_GLContext m_glContext; // OpenGL Context for use with drawing in the Window
-	bool m_isWindowClosed;
+	GLboolean m_isWindowClosed;
 
-	bool KEYS[322]; // Keyboard handling
+	GLboolean KEYS[322]; // Keyboard handling
 
 	
 };
